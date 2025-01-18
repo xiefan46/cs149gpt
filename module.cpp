@@ -5,6 +5,7 @@
 #include <sys/time.h>
 #include <vector>
 #include <immintrin.h>
+#include <cmath>
 
 // Uncomment for ISPC
 //#include "module_ispc.h"
@@ -123,6 +124,51 @@ torch::Tensor myNaiveAttention(torch::Tensor QTensor, torch::Tensor KTensor, tor
     */
     
     // -------- YOUR CODE HERE  -------- //
+    for (int b = 0; b < B; b++) {
+        for (int h = 0; h < H; h++) {
+            for (int i = 0; i < N; i++) {
+                for (int j = 0; j < N; j++) {
+                    float dot_prodcut = 0.0;
+                    for (int k = 0; k < d; k++) {
+                        float val1 = fourDimRead(Q, b, h, i, k, H, N, d);
+                        float val2 = fourDimRead(K, b, h, j, k, H, N, d);
+                        dot_prodcut += val1 * val2;
+                    }
+                    twoDimWrite(QK_t, i, j, N, dot_prodcut);
+                }
+            }
+        }
+    }
+
+    for (int i = 0; i < N; i++) {
+        float sum = 0.0;
+        for (int j = 0; j < N; j++) {
+            float val = twoDimRead(QK_t, i, j, N);
+            float exp_val = std::exp(val);
+            twoDimWrite(QK_t, i, j, N, exp_val)
+            sum += exp_val;
+        }
+        for (int j = 0; j < N; j++) {
+            float val = twoDimRead(QK_t, i, j, N);
+            twoDimWrite(QK_t, i, j, N, val / sum)
+        }
+    }
+
+    for (int b = 0; b < B; b++) {
+        for (int h = 0; h < H; h++) {
+            for (int i = 0 ; i < N; i++) {
+                for (int j = 0; j < d; j++) {
+                    float dot_product = 0.0;
+                    for (int k = 0; k < N; k++) {
+                        float val1 = twoDimRead(QK_t, i, k, N);
+                        float val2 = fourDimRead(V, b, h, k, j, H, N, d);
+                        dot_product += val1 * val2;
+                    }
+                    fourDimWrite(O, b, h, i, j, H, N, d, dot_product);
+                }
+            }
+        }
+    }
     
     // DO NOT EDIT THIS RETURN STATEMENT //
     // It formats your C++ Vector O back into a Tensor of Shape (B, H, N, d) and returns it //
