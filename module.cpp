@@ -145,7 +145,7 @@ torch::Tensor myNaiveAttention(torch::Tensor QTensor, torch::Tensor KTensor, tor
         for (int j = 0; j < N; j++) {
             float val = twoDimRead(QK_t, i, j, N);
             float exp_val = std::exp(val);
-            twoDimWrite(QK_t, i, j, N, exp_val)
+            twoDimWrite(QK_t, i, j, N, exp_val);
             sum += exp_val;
         }
         for (int j = 0; j < N; j++) {
