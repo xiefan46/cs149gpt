@@ -150,7 +150,8 @@ torch::Tensor myNaiveAttention(torch::Tensor QTensor, torch::Tensor KTensor, tor
         }
         for (int j = 0; j < N; j++) {
             float val = twoDimRead(QK_t, i, j, N);
-            twoDimWrite(QK_t, i, j, N, val / sum);
+            float res = val / sum;
+            twoDimWrite(QK_t, i, j, N, res);
         }
     }
 
